@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Painel de Pedidos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Merriweather:wght@600;700&family=Lato:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#0B5D52;
+    --primary-light:#0B5D5222;
+    --accent:#F2A93B;
+    --accent-light:#F2A93B26;
+    --bg:#FAF7F2;
+    --card:#FFFFFF;
+    --ink:#1C2321;
+    --ink-soft:#5B6462;
+    --line:#E7E1D6;
+    --danger:#C7492C;
+    --font-display:'Poppins',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);}
+  #app{min-height:100vh;display:flex;flex-direction:column;}
+
+  header.topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .logo{
+    width:38px;height:38px;border-radius:10px;background:var(--primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;
+  }
+  .brand .name{font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.2px;}
+  .brand .sub{font-size:11px;color:var(--ink-soft);margin-top:-2px;}
+
+  nav.tabs{display:flex;gap:4px;background:#F0EBE0;padding:4px;border-radius:12px;}
+  nav.tabs button{
+    border:none;background:transparent;padding:8px 14px;border-radius:9px;cursor:pointer;
+    font-family:var(--font-body);font-weight:600;font-size:13.5px;color:var(--ink-soft);
+    display:flex;align-items:center;gap:6px;transition:.15s;
+  }
+  nav.tabs button.active{background:var(--primary);color:#fff;}
+  nav.tabs button:not(.active):hover{color:var(--ink);}
+
+  main{flex:1;padding:22px;max-width:1180px;margin:0 auto;width:100%;}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;animation:fade .15s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+
+  h2.section-title{font-family:var(--font-display);font-size:19px;margin:0 0 4px;}
+  p.section-sub{color:var(--ink-soft);font-size:13px;margin:0 0 18px;}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);}
+
+  /* ORDERS TABLE */
+  table.orders{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.orders th{text-align:left;padding:10px 12px;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);border-bottom:1px solid var(--line);}
+  table.orders td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.orders tr:last-child td{border-bottom:none;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11.5px;font-weight:600;}
+  .badge.amber{background:#FBEBC7;color:#8A6116;}
+  .badge.blue{background:#DCE9F5;color:#2A5D8C;}
+  .badge.purple{background:#E7DEF5;color:#5E389B;}
+  .badge.green{background:#DCF0DF;color:#1F7A3D;}
+  .badge.gray{background:#E9E6DF;color:#6B655A;}
+  .badge.red{background:#F6DCD5;color:#A23A20;}
+  .btn{border:none;border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:.15s;}
+  .btn.primary{background:var(--primary);color:#fff;}
+  .btn.primary:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent;color:var(--primary);border:1px solid var(--primary);}
+  .btn.ghost:hover{background:var(--primary-light);}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .btn.sm{padding:5px 9px;font-size:11.5px;}
+  .btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .empty{padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+  /* MENU TAB */
+  .menu-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  .menu-item{display:flex;align-items:center;gap:12px;padding:12px 14px;}
+  .menu-item input[type=text]{font-family:var(--font-body);font-weight:600;font-size:14px;border:none;background:transparent;width:100%;color:var(--ink);}
+  .menu-item .price-wrap{display:flex;align-items:center;gap:4px;color:var(--ink-soft);font-size:13px;}
+  .menu-item input[type=number]{width:80px;border:1px solid var(--line);border-radius:8px;padding:5px 7px;font-family:var(--font-body);}
+  .menu-item .num{width:26px;height:26px;border-radius:8px;background:var(--accent-light);color:#8A5A0E;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .toggle{position:relative;width:38px;height:21px;flex-shrink:0;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle .slider{position:absolute;inset:0;background:#D9D3C6;border-radius:100px;cursor:pointer;transition:.15s;}
+  .toggle .slider:before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;}
+  .toggle input:checked + .slider{background:var(--primary);}
+  .toggle input:checked + .slider:before{transform:translateX(17px);}
+  .add-item-row{display:flex;gap:8px;padding:14px;flex-wrap:wrap;}
+  .add-item-row input{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--font-body);font-size:13.5px;}
+  .add-item-row input[name=name]{flex:1;min-width:180px;}
+  .add-item-row input[name=price]{width:110px;}
+
+  /* APPEARANCE TAB */
+  .appearance-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:start;}
+  @media (max-width:880px){.appearance-grid{grid-template-columns:1fr;}}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field input[type=text],.field input[type=number]{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:var(--font-body);font-size:13.5px;}
+  .color-row{display:flex;gap:14px;}
+  .color-pick{display:flex;align-items:center;gap:8px;background:#F5F1E8;border-radius:10px;padding:8px 10px;flex:1;}
+  .color-pick input[type=color]{width:34px;height:34px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;}
+  .font-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .font-card{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;}
+  .font-card.active{border-color:var(--primary);background:var(--primary-light);}
+  .font-card .fc-title{font-size:15px;font-weight:700;}
+  .font-card .fc-sub{font-size:11px;color:var(--ink-soft);}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .phone-mock{border-radius:26px;border:8px solid #1C2321;width:290px;margin:0 auto;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.15);}
+  .phone-mock .pm-head{background:var(--primary);color:#fff;padding:12px 14px;font-family:var(--font-display);}
+  .phone-mock .pm-head .pm-name{font-weight:600;font-size:14px;}
+  .phone-mock .pm-head .pm-status{font-size:10.5px;opacity:.85;}
+  .phone-mock .pm-body{background:#EDE6D6;background-image:radial-gradient(#00000008 1px,transparent 1px);background-size:14px 14px;padding:14px 10px;min-height:220px;display:flex;flex-direction:column;gap:8px;}
+  .bubble{max-width:82%;padding:8px 11px;border-radius:12px;font-size:12.5px;line-height:1.45;}
+  .bubble.bot{background:#fff;align-self:flex-start;border-bottom-left-radius:3px;}
+  .bubble.cliente{background:var(--accent-light);align-self:flex-end;border-bottom-right-radius:3px;}
+
+  /* BOT TESTER TAB */
+  .bot-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;}
+  @media (max-width:880px){.bot-layout{grid-template-columns:1fr;}}
+  .conv-list{max-height:600px;overflow-y:auto;}
+  .conv-list-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .conv-item{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .conv-item:hover{background:#F7F4EC;}
+  .conv-item.active{background:var(--primary-light);}
+  .conv-item .ci-top{display:flex;justify-content:space-between;font-size:13px;font-weight:600;}
+  .conv-item .ci-step{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;}
+  .dot.orange{background:#D98A1B;}
+  .dot.red{background:var(--danger);}
+
+  .chat-wrap{display:flex;flex-direction:column;height:640px;overflow:hidden;}
+  .chat-head{background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .chat-head .ch-name{font-family:var(--font-display);font-weight:600;font-size:14.5px;}
+  .chat-head .ch-step{font-size:11px;opacity:.85;}
+  .chat-body{flex:1;overflow-y:auto;padding:16px;background:#EDE6D6;background-image:radial-gradient(#00000008 1px,transparent 1px);background-size:16px 16px;display:flex;flex-direction:column;gap:8px;}
+  .msg{max-width:70%;padding:9px 12px;border-radius:13px;font-size:13px;line-height:1.5;position:relative;}
+  .msg.bot{background:#fff;align-self:flex-start;border-bottom-left-radius:3px;}
+  .msg.cliente{background:var(--accent-light);align-self:flex-end;border-bottom-right-radius:3px;}
+  .msg.atendente{background:var(--primary-light);align-self:flex-start;border-bottom-left-radius:3px;}
+  .msg.system{background:transparent;color:var(--ink-soft);align-self:center;font-size:11.5px;font-style:italic;}
+  .msg .tag{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;opacity:.55;margin-bottom:2px;}
+  .msg .time{display:block;font-size:9.5px;opacity:.5;margin-top:3px;text-align:right;}
+  .chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:13.5px;flex-direction:column;gap:8px;}
+  .chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#fff;align-items:center;}
+  .role-toggle{display:flex;background:#F0EBE0;border-radius:9px;padding:3px;}
+  .role-toggle button{border:none;background:transparent;padding:7px 10px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--ink-soft);}
+  .role-toggle button.active{background:var(--primary);color:#fff;}
+  .chat-input-row input[type=text]{flex:1;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:var(--font-body);font-size:13.5px;}
+  .new-conv-form{display:none;padding:10px 14px;border-bottom:1px solid var(--line);gap:6px;}
+  .new-conv-form.open{display:flex;}
+  .new-conv-form input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12.5px;}
+  .agent-banner{background:#FBEBC7;color:#8A6116;padding:8px 14px;font-size:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
+  .countdown{font-size:10.5px;color:var(--ink-soft);padding:4px 16px;text-align:right;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" id="brand-logo">S</div>
+      <div>
+        <div class="name" id="brand-name">Sabor Express</div>
+        <div class="sub">Painel de pedidos &amp; bot de WhatsApp</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs-nav"></nav>
+  </header>
+  <main id="main"></main>
+</div>
+
+<script>
+/* ============ CONFIG / DEFAULTS ============ */
+const FONT_PACKS = {
+  moderno:  {label:'Moderno',  display:"'Poppins',sans-serif",         body:"'Inter',sans-serif",       previewDisplay:'Poppins',      previewBody:'Inter'},
+  editorial:{label:'Editorial',display:"'Playfair Display',serif",     body:"'Source Sans 3',sans-serif",previewDisplay:'Playfair Display',previewBody:'Source Sans 3'},
+  tech:     {label:'Tech',     display:"'Space Grotesk',sans-serif",   body:"'IBM Plex Sans',sans-serif",previewDisplay:'Space Grotesk',previewBody:'IBM Plex Sans'},
+  classico: {label:'Clássico', display:"'Merriweather',serif",         body:"'Lato',sans-serif",         previewDisplay:'Merriweather', previewBody:'Lato'},
+};
+
+const DEFAULT_SETTINGS = {
+  businessName:'Sabor Express',
+  primaryColor:'#0B5D52',
+  accentColor:'#F2A93B',
+  fontPack:'moderno',
+  deliveryMin:35,
+  deliveryMax:55,
+  responseTimeoutMinutes:10,
+};
+
+const DEFAULT_MENU = [
+  {id:'m1', name:'X-Burger Clássico', price:22.90, available:true},
+  {id:'m2', name:'X-Bacon Duplo', price:26.90, available:true},
+  {id:'m3', name:'Batata Frita G', price:14.90, available:true},
+  {id:'m4', name:'Refrigerante Lata', price:6.00, available:true},
+  {id:'m5', name:'Combo Duplo + Batata + Refri', price:39.90, available:true},
+];
+
+const STEP_LABELS = {
+  start:'Novo contato', menu:'Vendo cardápio', collecting_items:'Escolhendo itens',
+  ask_name:'Informando nome', ask_phone:'Informando telefone', ask_address:'Informando endereço',
+  pre_payment:'Antes do pagamento', with_agent:'Com atendente', awaiting_payment:'Aguardando pagamento',
+  preparing:'Em preparo', out_for_delivery:'Saiu para entrega', delivered:'Entregue',
+  expired:'Expirada', cancelled:'Cancelada'
+};
+
+const ORDER_BADGE = {
+  'Aguardando pagamento':'amber', 'Pago - Preparando':'blue', 'Saiu para entrega':'purple',
+  'Entregue':'green', 'Cancelado':'gray', 'Expirado':'red'
+};
+
+/* ============ STATE ============ */
+let state = {
+  settings: {...DEFAULT_SETTINGS},
+  menuItems: [...DEFAULT_MENU],
+  orders: [],
+  conversations: {},
+  activeTab:'orders',
+  activeConvId:null,
+  chatRole:'cliente',
+  newConvOpen:false,
+};
+
+const TABS = [
+  {id:'orders', label:'Pedidos', icon:'🧾'},
+  {id:'menu', label:'Cardápio', icon:'🍔'},
+  {id:'bot', label:'Testar Bot', icon:'💬'},
+  {id:'appearance', label:'Aparência', icon:'🎨'},
+];
+
+/* ============ STORAGE ============ */
+async function loadKey(key, fallback){
+  try{
+    const r = await window.storage.get(key);
+    if(r && r.value) return JSON.parse(r.value);
+    return fallback;
+  }catch(e){ return fallback; }
+}
+async function saveKey(key, value){
+  try{ await window.storage.set(key, JSON.stringify(value)); }catch(e){ console.error('storage save failed', key, e); }
+}
+async function loadAll(){
+  state.settings = await loadKey('settings', {...DEFAULT_SETTINGS});
+  state.menuItems = await loadKey('menu-items', [...DEFAULT_MENU]);
+  state.orders = await loadKey('orders', []);
+  state.conversations = await loadKey('conversations', {});
+  applyTheme();
+  render();
+}
+function saveSettings(){ saveKey('settings', state.settings); }
+function saveMenu(){ saveKey('menu-items', state.menuItems); }
+function saveOrders(){ saveKey('orders', state.orders); }
+function saveConversations(){ saveKey('conversations', state.conversations); }
+
+/* ============ HELPERS ============ */
+function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function formatMoney(v){ return 'R$ ' + (Number(v)||0).toFixed(2).replace('.',','); }
+function formatTime(ts){ const d = new Date(ts); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+function renderMsgText(text){
+  let t = escapeHtml(text);
+  t = t.replace(/\*(.+?)\*/g, '<strong>$1</strong>');
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+function applyTheme(){
+  const r = document.documentElement.style;
+  r.setProperty('--primary', state.settings.primaryColor);
+  r.setProperty('--primary-light', state.settings.primaryColor + '1f');
+  r.setProperty('--accent', state.settings.accentColor);
+  r.setProperty('--accent-light', state.settings.accentColor + '26');
+  const pack = FONT_PACKS[state.settings.fontPack] || FONT_PACKS.moderno;
+  r.setProperty('--font-display', pack.display);
+  r.setProperty('--font-body', pack.body);
+  document.getElementById('brand-name').textContent = state.settings.businessName;
+  document.getElementById('brand-logo').textContent = (state.settings.businessName||'?').trim().charAt(0).toUpperCase();
+}
+
+/* ============ RENDER SHELL ============ */
+function render(){
+  renderTabsNav();
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <section class="tab-content ${state.activeTab==='orders'?'active':''}" id="tab-orders"></section>
+    <section class="tab-content ${state.activeTab==='menu'?'active':''}" id="tab-menu"></section>
+    <section class="tab-content ${state.activeTab==='bot'?'active':''}" id="tab-bot"></section>
+    <section class="tab-content ${state.activeTab==='appearance'?'active':''}" id="tab-appearance"></section>
+  `;
+  renderOrders();
+  renderMenu();
+  renderBotTab();
+  renderAppearance();
+}
+function renderTabsNav(){
+  const nav = document.getElementById('tabs-nav');
+  nav.innerHTML = TABS.map(t => `<button class="${state.activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')">${t.icon} ${t.label}</button>`).join('');
+}
+function switchTab(id){ state.activeTab = id; render(); }
+
+/* ============ ORDERS TAB ============ */
+function renderOrders(){
+  const el = document.getElementById('tab-orders');
+  const orders = [...state.orders].sort((a,b)=>b.createdAt-a.createdAt);
+  el.innerHTML = `
+    <h2 class="section-title">Pedidos</h2>
+    <p class="section-sub">Acompanhe e avance o status de cada pedido recebido pelo bot.</p>
+    <div class="card">
+      ${orders.length===0 ? `<div class="empty">Nenhum pedido ainda. Use a aba <strong>Testar Bot</strong> para simular um cliente fazendo um pedido.</div>` : `
+      <table class="orders">
+        <thead><tr>
+          <th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th>Criado</th><th>Ações</th>
+        </tr></thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td><strong>${escapeHtml(o.name||'—')}</strong><br><span style="color:var(--ink-soft);font-size:12px">${escapeHtml(o.phone)}</span></td>
+              <td>${o.items.map(i=>`${i.qty}x ${escapeHtml(i.name)}`).join('<br>')}</td>
+              <td><strong>${formatMoney(o.total)}</strong></td>
+              <td><span class="badge ${ORDER_BADGE[o.status]||'gray'}">${escapeHtml(o.status)}</span></td>
+              <td style="font-size:12px;color:var(--ink-soft)">${formatTime(o.createdAt)}</td>
+              <td>
+                <div class="btn-row">
+                  <button class="btn ghost sm" onclick="openConversationFromOrder('${o.phone}')">Ver conversa</button>
+                  ${o.status==='Aguardando pagamento' ? `<button class="btn primary sm" onclick="confirmPaymentManually('${o.id}')">Confirmar pagamento</button>` : ''}
+                  ${o.status==='Pago - Preparando' ? `<button class="btn primary sm" onclick="releaseOrder('${o.id}')">Liberar / saiu p/ entrega</button>` : ''}
+                  ${o.status==='Saiu para entrega' ? `<button class="btn primary sm" onclick="markDelivered('${o.id}')">Marcar entregue</button>` : ''}
+                  ${['Aguardando pagamento','Pago - Preparando','Saiu para entrega'].includes(o.status) ? `<button class="btn danger sm" onclick="cancelOrder('${o.id}')">Cancelar</button>` : ''}
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+function findConvByPhone(phone){ return state.conversations[phone]; }
+
+function openConversationFromOrder(phone){
+  state.activeConvId = phone;
+  state.activeTab = 'bot';
+  state.chatRole = 'cliente';
+  render();
+}
+
+function confirmPaymentManually(orderId){
+  const order = state.orders.find(o=>o.id===orderId); if(!order) return;
+  order.status = 'Pago - Preparando'; order.paidAt = Date.now();
+  const conv = findConvByPhone(order.phone);
+  if(conv && conv.step==='awaiting_payment'){
+    conv.step = 'preparing';
+    pushBotMessage(conv, `Pagamento confirmado! ✅\nSeu pedido já está sendo preparado.\n⏱️ Tempo estimado de entrega: ${state.settings.deliveryMin}–${state.settings.deliveryMax} minutos.`);
+  }
+  saveOrders(); saveConversations(); render();
+}
+function releaseOrder(orderId){
+  const order = state.orders.find(o=>o.id===orderId); if(!order) return;
+  order.status = 'Saiu para entrega';
+  const conv = findConvByPhone(order.phone);
+  if(conv){ conv.step = 'out_for_delivery'; pushBotMessage(conv, 'Seu pedido saiu para entrega! 🛵 Chega em breve.'); }
+  saveOrders(); saveConversations(); render();
+}
+function markDelivered(orderId){
+  const order = state.orders.find(o=>o.id===orderId); if(!order) return;
+  order.status = 'Entregue';
+  const conv = findConvByPhone(order.phone);
+  if(conv){ conv.step = 'delivered'; pushBotMessage(conv, 'Pedido entregue! Obrigado pela preferência 😊'); }
+  saveOrders(); saveConversations(); render();
+}
+function cancelOrder(orderId){
+  const order = state.orders.find(o=>o.id===orderId); if(!order) return;
+  order.status = 'Cancelado';
+  const conv = findConvByPhone(order.phone);
+  if(conv){ conv.step = 'cancelled'; pushBotMessage(conv, 'Seu pedido foi cancelado. Qualquer dúvida, estamos à disposição.'); }
+  saveOrders(); saveConversations(); render();
+}
+
+function pushBotMessage(conv, text){
+  conv.log.push({from:'bot', text, time:Date.now()});
+  conv.lastBotMessageAt = Date.now();
+}
+
+/* ============ MENU TAB ============ */
+function renderMenu(){
+  const el = document.getElementById('tab-menu');
+  el.innerHTML = `
+    <h2 class="section-title">Cardápio</h2>
+    <p class="section-sub">Os números usados pelo bot seguem a ordem dos itens disponíveis abaixo.</p>
+    <div class="card menu-grid">
+      ${state.menuItems.map((m,i)=>`
+        <div class="menu-item" style="border-bottom:1px solid var(--line)">
+          <div class="num">${state.menuItems.filter(x=>x.available).indexOf(m)>=0 && m.available ? (state.menuItems.filter(x=>x.available).indexOf(m)+1) : '–'}</div>
+          <input type="text" value="${escapeHtml(m.name)}" oninput="updateMenuItem('${m.id}','name',this.value)">
+          <div class="price-wrap">R$ <input type="number" step="0.10" min="0" value="${m.price}" oninput="updateMenuItem('${m.id}','price',this.value)"></div>
+          <label class="toggle" title="Disponível">
+            <input type="checkbox" ${m.available?'checked':''} onchange="updateMenuItem('${m.id}','available',this.checked)">
+            <span class="slider"></span>
+          </label>
+          <button class="btn danger sm" onclick="removeMenuItem('${m.id}')">Remover</button>
+        </div>
+      `).join('')}
+      <div class="add-item-row">
+        <input type="text" name="name" placeholder="Nome do novo item" id="new-item-name">
+        <input type="number" name="price" placeholder="Preço" step="0.10" min="0" id="new-item-price">
+        <button class="btn primary" onclick="addMenuItem()">+ Adicionar item</button>
+      </div>
+    </div>
+  `;
+}
+function updateMenuItem(id, field, value){
+  const item = state.menuItems.find(m=>m.id===id); if(!item) return;
+  item[field] = field==='price' ? parseFloat(value)||0 : (field==='available' ? value : value);
+  saveMenu(); renderMenu();
+}
+function removeMenuItem(id){
+  state.menuItems = state.menuItems.filter(m=>m.id!==id);
+  saveMenu(); renderMenu();
+}
+function addMenuItem(){
+  const nameEl = document.getElementById('new-item-name');
+  const priceEl = document.getElementById('new-item-price');
+  const name = nameEl.value.trim(); const price = parseFloat(priceEl.value)||0;
+  if(!name) return;
+  state.menuItems.push({id:uid('m'), name, price, available:true});
+  saveMenu(); renderMenu();
+}
+
+/* ============ APPEARANCE TAB ============ */
+function renderAppearance(){
+  const el = document.getElementById('tab-appearance');
+  const s = state.settings;
+  el.innerHTML = `
+    <h2 class="section-title">Aparência</h2>
+    <p class="section-sub">Personalize cores, tipografia e regras de tempo. Tudo é salvo automaticamente.</p>
+    <div class="appearance-grid">
+      <div class="card" style="padding:18px">
+        <div class="field">
+          <label>Nome do negócio</label>
+          <input type="text" value="${escapeHtml(s.businessName)}" oninput="updateSetting('businessName', this.value)">
+        </div>
+        <div class="field">
+          <label>Cores</label>
+          <div class="color-row">
+            <div class="color-pick"><input type="color" value="${s.primaryColor}" oninput="updateSetting('primaryColor', this.value)"><span>Primária</span></div>
+            <div class="color-pick"><input type="color" value="${s.accentColor}" oninput="updateSetting('accentColor', this.value)"><span>Destaque</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Combinação de fontes</label>
+          <div class="font-cards">
+            ${Object.entries(FONT_PACKS).map(([key,p])=>`
+              <div class="font-card ${s.fontPack===key?'active':''}" onclick="updateSetting('fontPack','${key}')">
+                <div class="fc-title" style="font-family:'${p.previewDisplay}',sans-serif">${p.label}</div>
+                <div class="fc-sub" style="font-family:'${p.previewBody}',sans-serif">${p.previewDisplay} + ${p.previewBody}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Tempo estimado de entrega (minutos)</label>
+          <div class="two-col">
+            <input type="number" min="1" value="${s.deliveryMin}" oninput="updateSetting('deliveryMin', parseInt(this.value)||0)" placeholder="Mínimo">
+            <input type="number" min="1" value="${s.deliveryMax}" oninput="updateSetting('deliveryMax', parseInt(this.value)||0)" placeholder="Máximo">
+          </div>
+        </div>
+        <div class="field">
+          <label>Tempo limite de resposta do cliente no WhatsApp (minutos)</label>
+          <input type="number" min="0.5" step="0.5" value="${s.responseTimeoutMinutes}" oninput="updateSetting('responseTimeoutMinutes', parseFloat(this.value)||0)">
+          <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px">Padrão: 10 min. Diminua este valor apenas para testar a expiração mais rápido.</div>
+        </div>
+      </div>
+      <div>
+        <div class="phone-mock">
+          <div class="pm-head">
+            <div class="pm-name">${escapeHtml(s.businessName)}</div>
+            <div class="pm-status">online</div>
+          </div>
+          <div class="pm-body">
+            <div class="bubble bot">Olá! 👋 Seja bem-vindo(a) à <strong>${escapeHtml(s.businessName)}</strong>!<br>1 - X-Burger Clássico — R$ 22,90</div>
+            <div class="bubble cliente">1</div>
+            <div class="bubble bot">Perfeito! Qual é o seu nome completo?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function updateSetting(key, value){
+  state.settings[key] = value;
+  applyTheme();
+  saveSettings();
+  if(state.activeTab==='appearance') renderAppearance();
+}
+
+/* ============ BOT LOGIC (state machine) ============ */
+function buildMenuText(){
+  const available = state.menuItems.filter(m=>m.available);
+  const lines = available.map((m,i)=> `*${i+1}* - ${m.name} — ${formatMoney(m.price)}`);
+  return `Olá! 👋 Seja bem-vindo(a) à *${state.settings.businessName}*!\n\nEscolha os itens do seu pedido pelo número (pode enviar mais de um separado por vírgula, ex: 1,3):\n\n${lines.join('\n')}\n\nQuando terminar, digite *0* para finalizar.`;
+}
+function cartTotal(conv){
+  return conv.cart.reduce((sum,c)=>{ const item = state.menuItems.find(m=>m.id===c.id); return sum + (item?item.price*c.qty:0); }, 0);
+}
+function cartToText(conv){
+  if(!conv.cart.length) return 'Carrinho vazio.';
+  const lines = conv.cart.map(c=>{
+    const item = state.menuItems.find(m=>m.id===c.id);
+    return `${c.qty}x ${item?item.name:'Item removido'} — ${formatMoney((item?item.price:0)*c.qty)}`;
+  });
+  return lines.join('\n') + `\n*Total: ${formatMoney(cartTotal(conv))}*`;
+}
+function parseItemSelection(text){
+  const available = state.menuItems.filter(m=>m.available);
+  const nums = text.split(/[,\s]+/).map(s=>s.trim()).filter(Boolean);
+  const added=[]; const invalid=[];
+  nums.forEach(n=>{
+    const idx = parseInt(n,10);
+    if(!isNaN(idx) && idx>=1 && idx<=available.length) added.push(available[idx-1]);
+    else invalid.push(n);
+  });
+  return {added, invalid};
+}
+function buildPaymentText(conv){
+  const total = cartTotal(conv);
+  const key = ('contato@' + (state.settings.businessName||'loja').toLowerCase().replace(/[^a-z0-9]+/g,'') + '.com');
+  return `Para concluir, realize o pagamento via Pix:\n🔑 Chave Pix: ${key}\n💰 Valor: ${formatMoney(total)}\n\nQuando finalizar, digite *paguei* para confirmarmos.`;
+}
+function createOrderFromConversation(conv){
+  const items = conv.cart.map(c=>{ const item = state.menuItems.find(m=>m.id===c.id); return {id:c.id, name:item?item.name:'Item', price:item?item.price:0, qty:c.qty}; });
+  const order = {
+    id: uid('ped_'), phone: conv.phone, name: conv.name, contactPhone: conv.contactPhone,
+    address: conv.address, items, total: cartTotal(conv), status:'Aguardando pagamento', createdAt: Date.now()
+  };
+  state.orders.push(order);
+  conv.orderId = order.id;
+  saveOrders();
+}
+function markOrderPaid(conv){
+  const order = state.orders.find(o=>o.id===conv.orderId);
+  if(order){ order.status='Pago - Preparando'; order.paidAt=Date.now(); saveOrders(); }
+}
+
+function handleCustomerMessage(conv, rawText){
+  const text = rawText.trim();
+  const lower = text.toLowerCase();
+  let reply = '';
+  switch(conv.step){
+    case 'start': {
+      conv.cart = [];
+      conv.step = 'menu';
+      reply = buildMenuText();
+      break;
+    }
+    case 'menu':
+    case 'collecting_items': {
+      if(text==='0' || lower==='finalizar'){
+        if(!conv.cart.length){ reply = 'Seu carrinho ainda está vazio. Escolha ao menos um item pelo número.'; break; }
+        conv.step = 'ask_name';
+        reply = `Resumo do pedido:\n${cartToText(conv)}\n\nPara continuar, qual é o seu nome completo?`;
+      } else {
+        const {added, invalid} = parseItemSelection(text);
+        added.forEach(item=>{
+          const existing = conv.cart.find(c=>c.id===item.id);
+          if(existing) existing.qty++; else conv.cart.push({id:item.id, qty:1});
+        });
+        conv.step = 'collecting_items';
+        reply = '';
+        if(added.length) reply += `Adicionado: ${added.map(a=>a.name).join(', ')}.\n`;
+        if(invalid.length) reply += `Não reconheci: ${invalid.join(', ')}.\n`;
+        reply += 'Digite mais números para adicionar ou *0* para finalizar.';
+      }
+      break;
+    }
+    case 'ask_name': {
+      conv.name = text;
+      conv.step = 'ask_phone';
+      reply = `Obrigado, ${conv.name}! Agora, me informe um número de telefone para contato.`;
+      break;
+    }
+    case 'ask_phone': {
+      conv.contactPhone = text;
+      conv.step = 'ask_address';
+      reply = 'Perfeito. Qual o endereço completo para entrega?';
+      break;
+    }
+    case 'ask_address': {
+      conv.address = text;
+      conv.step = 'pre_payment';
+      reply = `Aqui está o resumo do seu pedido:\n\n${cartToText(conv)}\n\n*Cliente:* ${conv.name}\n*Telefone:* ${conv.contactPhone}\n*Endereço:* ${conv.address}\n\nAntes de prosseguir com o pagamento, você tem alguma dúvida?\n*1* - Falar com um atendente\n*2* - Continuar para o pagamento`;
+      break;
+    }
+    case 'pre_payment': {
+      if(text==='1'){
+        conv.step = 'with_agent';
+        conv.needsAgent = true;
+        reply = 'Certo! Vou te conectar com um atendente, só um instante 👤';
+      } else if(text==='2'){
+        conv.step = 'awaiting_payment';
+        createOrderFromConversation(conv);
+        reply = buildPaymentText(conv);
+      } else {
+        reply = 'Não entendi 🙏 Digite *1* para falar com um atendente ou *2* para continuar para o pagamento.';
+      }
+      break;
+    }
+    case 'with_agent': {
+      if(text==='2' || lower.includes('pagamento') || lower.includes('continuar')){
+        conv.step = 'awaiting_payment';
+        conv.needsAgent = false;
+        if(!conv.orderId) createOrderFromConversation(conv);
+        reply = buildPaymentText(conv);
+      } else {
+        return null; // bot fica em silêncio, atendente deve responder manualmente
+      }
+      break;
+    }
+    case 'awaiting_payment': {
+      if(lower.includes('paguei') || lower.includes('pago')){
+        conv.step = 'preparing';
+        markOrderPaid(conv);
+        reply = `Pagamento confirmado! ✅\nSeu pedido já está sendo preparado.\n⏱️ Tempo estimado de entrega: ${state.settings.deliveryMin}–${state.settings.deliveryMax} minutos.`;
+      } else {
+        reply = 'Ainda estou aguardando a confirmação do pagamento. Assim que pagar, digite *paguei* 🙂';
+      }
+      break;
+    }
+    case 'preparing': {
+      reply = `Seu pedido está sendo preparado com carinho 👨‍🍳 Tempo estimado: ${state.settings.deliveryMin}–${state.settings.deliveryMax} min.`;
+      break;
+    }
+    case 'out_for_delivery': {
+      reply = 'Seu pedido já saiu para entrega e chega em breve! 🛵';
+      break;
+    }
+    case 'delivered':
+    case 'expired':
+    case 'cancelled': {
+      conv.cart=[]; conv.name=null; conv.contactPhone=null; conv.address=null; conv.orderId=null; conv.needsAgent=false;
+      conv.step = 'menu';
+      reply = buildMenuText();
+      break;
+    }
+    default: {
+      conv.step='menu'; conv.cart=[];
+      reply = buildMenuText();
+    }
+  }
+  return reply;
+}
+
+/* ============ BOT TESTER TAB (UI) ============ */
+function renderBotTab(){
+  const el = document.getElementById('tab-bot');
+  const convs = Object.values(state.conversations).sort((a,b)=>(b.lastCustomerMessageAt||b.createdAt)-(a.lastCustomerMessageAt||a.createdAt));
+  const active = state.activeConvId ? state.conversations[state.activeConvId] : null;
+
+  el.innerHTML = `
+    <h2 class="section-title">Testar Bot</h2>
+    <p class="section-sub">Simule manualmente uma conversa de WhatsApp — envie como cliente, ou responda como atendente humano.</p>
+    <div class="bot-layout">
+      <div class="card conv-list">
+        <div class="conv-list-head">
+          <strong style="font-size:13px">Conversas</strong>
+          <button class="btn ghost sm" onclick="toggleNewConv()">+ Novo nº</button>
+        </div>
+        <div class="new-conv-form ${state.newConvOpen?'open':''}">
+          <input type="text" id="new-conv-phone" placeholder="+55 11 91234-5678">
+          <button class="btn primary sm" onclick="createConversation()">Criar</button>
+        </div>
+        ${convs.length===0 ? `<div class="empty">Nenhuma conversa simulada ainda.</div>` : convs.map(c=>`
+          <div class="conv-item ${state.activeConvId===c.phone?'active':''}" onclick="selectConversation('${c.phone}')">
+            <div class="ci-top">
+              <span>${escapeHtml(c.name || c.phone)}</span>
+              ${c.needsAgent ? '<span class="dot orange"></span>' : (c.step==='expired' ? '<span class="dot red"></span>' : '')}
+            </div>
+            <div class="ci-step">${STEP_LABELS[c.step]||c.step}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card chat-wrap">
+        ${active ? renderChatPanel(active) : `<div class="chat-empty"><div style="font-size:26px">💬</div>Selecione ou crie uma conversa para começar a testar</div>`}
+      </div>
+    </div>
+  `;
+
+  if(active){
+    const body = document.getElementById('chat-body');
+    if(body) body.scrollTop = body.scrollHeight;
+  }
+}
+
+function renderChatPanel(conv){
+  const timeoutMs = (state.settings.responseTimeoutMinutes||10) * 60000;
+  const waitingOnCustomer = !['delivered','expired','cancelled','start'].includes(conv.step);
+  const elapsed = Date.now() - (conv.lastCustomerMessageAt || conv.createdAt);
+  const remaining = Math.max(0, timeoutMs - elapsed);
+  const mm = Math.floor(remaining/60000);
+  const ss = Math.floor((remaining%60000)/1000);
+
+  return `
+    <div class="chat-head">
+      <div>
+        <div class="ch-name">${escapeHtml(conv.name || conv.phone)}</div>
+        <div class="ch-step">${escapeHtml(conv.phone)} · ${STEP_LABELS[conv.step]||conv.step}</div>
+      </div>
+      ${conv.needsAgent ? `<button class="btn sm" style="background:#fff;color:var(--primary)" onclick="resumeBot('${conv.phone}')">Retomar bot ▶</button>` : ''}
+    </div>
+    ${conv.needsAgent ? `<div class="agent-banner"><span>👤 Cliente pediu para falar com um atendente</span></div>` : ''}
+    <div class="chat-body" id="chat-body">
+      ${conv.log.length===0 ? '<div class="chat-empty">Envie a primeira mensagem como cliente para o bot iniciar o atendimento.</div>' : conv.log.map(m=>`
+        <div class="msg ${m.from}">
+          ${m.from==='atendente' ? '<span class="tag">Atendente</span>' : ''}
+          ${renderMsgText(m.text)}
+          <span class="time">${formatTime(m.time)}</span>
+        </div>
+      `).join('')}
+    </div>
+    ${waitingOnCustomer ? `<div class="countdown">⏱️ expira em ${mm}:${String(ss).padStart(2,'0')} sem resposta do cliente</div>` : ''}
+    <div class="chat-input-row">
+      <div class="role-toggle">
+        <button class="${state.chatRole==='cliente'?'active':''}" onclick="setChatRole('cliente')">Cliente</button>
+        <button class="${state.chatRole==='atendente'?'active':''}" onclick="setChatRole('atendente')">Atendente</button>
+      </div>
+      <input type="text" id="chat-input" placeholder="${state.chatRole==='cliente' ? 'Digite como se fosse o cliente...' : 'Responder como atendente...'}" onkeydown="if(event.key==='Enter') sendChatMessage()">
+      <button class="btn primary" onclick="sendChatMessage()">Enviar</button>
+    </div>
+  `;
+}
+
+function toggleNewConv(){ state.newConvOpen = !state.newConvOpen; render(); }
+function createConversation(){
+  const input = document.getElementById('new-conv-phone');
+  const phone = (input.value || '').trim();
+  if(!phone) return;
+  if(!state.conversations[phone]){
+    state.conversations[phone] = {
+      phone, step:'start', cart:[], name:null, contactPhone:null, address:null,
+      orderId:null, needsAgent:false, log:[], createdAt:Date.now(), lastCustomerMessageAt:Date.now()
+    };
+    saveConversations();
+  }
+  state.activeConvId = phone;
+  state.newConvOpen = false;
+  state.chatRole = 'cliente';
+  render();
+}
+function selectConversation(phone){ state.activeConvId = phone; state.chatRole='cliente'; render(); }
+function setChatRole(role){ state.chatRole = role; render(); }
+
+function resumeBot(phone){
+  const conv = state.conversations[phone]; if(!conv) return;
+  conv.needsAgent = false;
+  conv.step = 'awaiting_payment';
+  if(!conv.orderId) createOrderFromConversation(conv);
+  pushBotMessage(conv, buildPaymentText(conv));
+  saveConversations(); saveOrders(); render();
+}
+
+function sendChatMessage(){
+  const conv = state.activeConvId ? state.conversations[state.activeConvId] : null;
+  if(!conv) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+
+  if(state.chatRole === 'cliente'){
+    conv.log.push({from:'cliente', text, time:Date.now()});
+    conv.lastCustomerMessageAt = Date.now();
+    const reply = handleCustomerMessage(conv, text);
+    if(reply) pushBotMessage(conv, reply);
+  } else {
+    conv.log.push({from:'atendente', text, time:Date.now()});
+  }
+  saveConversations();
+  render();
+  const chatInput = document.getElementById('chat-input');
+  if(chatInput) chatInput.focus();
+}
+
+/* ============ TIMEOUT WATCHER ============ */
+function checkTimeouts(){
+  const timeoutMs = (state.settings.responseTimeoutMinutes||10) * 60000;
+  let changed = false;
+  Object.values(state.conversations).forEach(conv=>{
+    if(['delivered','expired','cancelled','start'].includes(conv.step)) return;
+    const last = conv.lastCustomerMessageAt || conv.createdAt;
+    if(Date.now() - last > timeoutMs){
+      conv.step = 'expired';
+      conv.needsAgent = false;
+      conv.log.push({from:'system', text:`⏰ Conversa expirada — sem resposta do cliente por mais de ${state.settings.responseTimeoutMinutes} min.`, time:Date.now()});
+      if(conv.orderId){
+        const order = state.orders.find(o=>o.id===conv.orderId);
+        if(order && !['Entregue','Cancelado','Saiu para entrega'].includes(order.status)){
+          order.status = 'Expirado';
+          changed = true;
+        }
+      }
+      changed = true;
+    }
+  });
+  if(changed){ saveConversations(); saveOrders(); render(); }
+  else if(state.activeTab==='bot' && state.activeConvId){
+    // apenas atualiza o contador visível sem re-render completo
+    const conv = state.conversations[state.activeConvId];
+    if(conv){
+      const cd = document.querySelector('.countdown');
+      if(cd){
+        const elapsed = Date.now() - (conv.lastCustomerMessageAt || conv.createdAt);
+        const remaining = Math.max(0, timeoutMs - elapsed);
+        const mm = Math.floor(remaining/60000);
+        const ss = Math.floor((remaining%60000)/1000);
+        cd.textContent = `⏱️ expira em ${mm}:${String(ss).padStart(2,'0')} sem resposta do cliente`;
+      }
+    }
+  }
+}
+setInterval(checkTimeouts, 1000);
+
+/* ============ INIT ============ */
+loadAll();
+</script>
+</body>
+</html>
